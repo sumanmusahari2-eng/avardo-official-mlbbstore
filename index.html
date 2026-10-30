@@ -1038,6 +1038,19 @@
       .best-meta b{font-size:.85rem;line-height:1.3}
       .best-meta span{font-size:.72rem;color:var(--muted);font-weight:700}
       .best-meta .from{font-size:.76rem;font-weight:800;color:var(--accent);margin-top:.25rem}
+      /* ===== BLOG ===== */
+      .blog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem}
+      @media (max-width:860px){.blog-grid{grid-template-columns:1fr 1fr}}
+      @media (max-width:560px){.blog-grid{grid-template-columns:1fr}}
+      .blog-card{text-align:left;background:var(--card);border:1px solid var(--border-soft);border-radius:16px;overflow:hidden;padding:0;display:flex;flex-direction:column;cursor:pointer;transition:transform .2s,border-color .2s;font:inherit;color:inherit}
+      .blog-card:hover{transform:translateY(-3px);border-color:var(--accent)}
+      .blog-art{aspect-ratio:16/8;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent-strong));font-family:"Sora",sans-serif;font-weight:800;font-size:1.7rem;color:var(--accent-ink)}
+      .blog-meta{padding:.8rem .9rem .95rem;display:flex;flex-direction:column;gap:.3rem}
+      .blog-tag{align-self:flex-start;font-size:.62rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}
+      .blog-meta b{font-size:.95rem;line-height:1.35}
+      .blog-meta span{font-size:.78rem;color:var(--muted);font-weight:500;line-height:1.5}
+      .blog-post h3{font-size:1.15rem;margin:1.2rem 0 .4rem}
+      .blog-post p{color:var(--muted);line-height:1.7;font-size:.92rem;margin:.5rem 0}
       /* ===== LEADERBOARD — TOP BUYERS (public, masked names only) ===== */
       .lb-list{display:grid;gap:.55rem}
       .lb-row{display:flex;align-items:center;gap:.85rem;background:var(--card);border:1px solid var(--border-soft);border-radius:16px;padding:.8rem 1rem}
@@ -1505,6 +1518,26 @@
         </section>
 
        <div class="store-view">
+        <!-- ================= FROM THE BLOG ================= -->
+        <section id="blog" aria-label="From the blog">
+          <div class="sec-head">
+            <div>
+              <h2>From the Blog</h2>
+              <p>Guides for safe, fast top-ups.</p>
+            </div>
+          </div>
+          <div class="blog-grid" id="blogGrid"></div>
+          <article class="blog-post" id="blogPost" hidden>
+            <button class="back-btn" id="blogBackBtn" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-7-7 7 7 7"/></svg>
+              All posts
+            </button>
+            <p class="blog-tag" id="blogPostTag"></p>
+            <h2 id="blogPostTitle"></h2>
+            <div id="blogPostBody"></div>
+          </article>
+        </section>
+
         <!-- ================= FAQ & SUPPORT ================= -->
         <section id="faq" aria-label="Frequently asked questions and support">
           <div class="sec-head">
@@ -2535,6 +2568,51 @@
         el.innerHTML = list.length ? list.map(function (f) {
           return '<details class="faq-item"><summary>' + esc(f.q) + "</summary><p>" + esc(f.a || "") + "</p></details>";
         }).join("") : '<div class="empty-small">No questions yet.</div>';
+      }
+      /* ==================== BLOG ==================== */
+      var BLOG_POSTS = [
+        { tag: "Guide", emoji: "🎮", title: "How to find your MLBB User ID and Zone ID",
+          teaser: "Two numbers, found in seconds under your in-game avatar — and the only details a top-up ever needs.",
+          body: ["Open Mobile Legends and tap your avatar in the top-left corner of the main screen. Your User ID is the long number shown under your name.",
+            "Your Zone ID is the smaller number in brackets right next to it — for example, in 12345678 (2345), the Zone ID is 2345. Both numbers matter: the same User ID can exist on different servers, and the Zone ID tells the system which one is yours.",
+            "Enter both numbers exactly as shown, then tap Check ID before you pay. If the nickname it shows matches your in-game name, your IDs are right and the order will reach the correct account."] },
+        { tag: "Safety", emoji: "🔒", title: "ID-only delivery: what a safe top-up never asks for",
+          teaser: "A real top-up needs your game ID and nothing else. If a seller asks for more, walk away.",
+          body: ["Legitimate top-ups are delivered by game ID only. No seller ever needs your game password, login code, or access to your account — anyone asking for those is not selling a top-up.",
+            "Before you pay, double-check the User ID and Zone ID one more time. Delivery goes to exactly the ID you enter, and a top-up sent to a wrong ID cannot be reversed.",
+            "After payment, most packs land within a minute of confirmation. If anything looks off, contact support on WhatsApp with your order code and the ID you entered."] },
+        { tag: "Guide", emoji: "💎", title: "Picking the right pack for your server",
+          teaser: "Packs are tied to the region your account was created in — pick the variant that matches it.",
+          body: ["Mobile Legends accounts live on regional servers, so this store lists the game per region — India, Brazil, Philippines, and more. Always pick the variant for the country your account was created in, not just the cheapest one you see.",
+            "Inside a variant you will find diamond packs of different sizes. The panel shows the current price for each pack, so compare there rather than trusting a screenshot or an old post.",
+            "If you are unsure which region your account belongs to, the region checker on the panel can help — and support on WhatsApp can confirm it before you order."] }
+      ];
+      function renderBlog() {
+        var grid = document.getElementById("blogGrid");
+        if (!grid) return;
+        grid.innerHTML = BLOG_POSTS.map(function (p, i) {
+          return '<button class="blog-card" type="button" data-i="' + i + '"><span class="blog-art">' + esc(p.emoji) + '</span><span class="blog-meta"><span class="blog-tag">' + esc(p.tag) + '</span><b>' + esc(p.title) + '</b><span>' + esc(p.teaser) + '</span></span></button>';
+        }).join("");
+        Array.prototype.forEach.call(grid.querySelectorAll(".blog-card"), function (btn) {
+          btn.addEventListener("click", function () { openBlogPost(parseInt(btn.getAttribute("data-i"), 10)); });
+        });
+        var back = document.getElementById("blogBackBtn");
+        if (back) back.addEventListener("click", closeBlogPost);
+      }
+      function openBlogPost(i) {
+        var p = BLOG_POSTS[i];
+        if (!p) return;
+        document.getElementById("blogPostTag").textContent = p.tag;
+        document.getElementById("blogPostTitle").textContent = p.title;
+        document.getElementById("blogPostBody").innerHTML = p.body.map(function (para) { return "<p>" + esc(para) + "</p>"; }).join("");
+        document.getElementById("blogGrid").hidden = true;
+        document.getElementById("blogPost").hidden = false;
+        document.getElementById("blog").scrollIntoView();
+      }
+      function closeBlogPost() {
+        document.getElementById("blogPost").hidden = true;
+        document.getElementById("blogGrid").hidden = false;
+        document.getElementById("blog").scrollIntoView();
       }
       function syncCurrencyUI() {
         /* ₹ only — no currency toggle. Keeps the games subtitle and any
@@ -5818,6 +5896,7 @@
          request on data most visits never look at. */
       selectGame("mlbb-in", false);
       renderFaqs();
+      renderBlog();
       syncCurrencyUI();
       applyBranding();
       applySeo();
