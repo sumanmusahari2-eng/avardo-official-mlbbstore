@@ -1021,6 +1021,15 @@
       .announce-row{display:grid;gap:.5rem;margin-top:1rem}
 .bslider{position:relative;overflow:hidden}
 .bslider-track{display:flex;transition:transform .5s ease;will-change:transform}
+.move-banner{overflow:hidden;background:linear-gradient(135deg,var(--accent),var(--accent-strong));color:var(--accent-ink);border-radius:14px;margin-top:.75rem}
+.move-track{display:inline-flex;white-space:nowrap;animation:moveScroll 30s linear infinite;padding:.55rem 0;font-weight:800;font-size:.85rem;letter-spacing:.01em}
+.move-track span{padding-right:2.5rem}
+.move-banner:hover .move-track{animation-play-state:paused}
+@keyframes moveScroll{to{transform:translateX(-50%)}}
+.blog-link-row{width:100%;display:flex;justify-content:space-between;align-items:center;gap:1rem;text-align:left;background:var(--card-2);border:1px solid var(--border);border-radius:16px;padding:1rem 1.2rem;color:var(--foreground);cursor:pointer}
+.blog-link-row b{display:block;font-family:"Sora",sans-serif;font-size:1.05rem}
+.blog-link-row small{display:block;opacity:.75;margin-top:.15rem}
+.blog-link-row .blog-link-arrow{font-size:1.3rem;color:var(--accent);flex:none}
 .bslide{flex:0 0 100%;min-width:0}
 .bslide>*{width:100%;box-sizing:border-box}
 .bs-prev,.bs-next{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:color-mix(in srgb,var(--card) 88%,transparent);color:var(--foreground);font-size:20px;line-height:1;cursor:pointer;padding:0}
@@ -1388,6 +1397,7 @@
         <div class="announce-row" id="bannerRow" hidden></div>
         <!-- ================= HIGHLIGHTS (rendered from store data) ================= -->
         <div class="highlights" id="highlightRow" aria-label="Highlights"></div>
+        <div class="move-banner" id="moveBanner" aria-label="Announcement"><div class="move-track" id="moveTrack"></div></div>
 
         <!-- ================= BEST SELLERS (live, from delivered orders) ================= -->
         <section id="bestSection" aria-label="Best sellers" hidden>
@@ -1421,12 +1431,6 @@
 
         <!-- ================= GAMES ================= -->
         <section id="games" aria-label="Our games">
-          <div class="sec-head">
-            <div>
-              <h2>Our Games <span class="count-pill" id="gameCount">15 Ready</span></h2>
-              <p id="gamesSub">Tap a game to open its top-up panel — prices in ₹, delivery by game ID.</p>
-            </div>
-          </div>
           <div class="tabs" id="filterTabs" role="group" aria-label="Filter games">
             <button class="tab active" type="button" data-filter="all">All Games</button>
             <button class="tab" type="button" data-filter="mlbb">MLBB</button>
@@ -1528,24 +1532,11 @@
 
        <div class="store-view">
         <!-- ================= FROM THE BLOG ================= -->
-        <section id="blog" aria-label="From the blog">
-          <div class="sec-head">
-            <div>
-              <h2>From the Blog</h2>
-              <p>Guides for safe, fast top-ups.</p>
-            </div>
-          </div>
-          <div class="blog-grid" id="blogGrid"></div>
-          <article class="blog-post" id="blogPost" hidden>
-            <button class="back-btn" id="blogBackBtn" type="button">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-7-7 7 7 7"/></svg>
-              All posts
-            </button>
-            <p class="blog-tag" id="blogPostTag"></p>
-            <h2 id="blogPostTitle"></h2>
-            <div id="blogPostBody"></div>
-          </article>
-        </section>
+        <!-- BLOG LINK (the blog lives on its own page now) -->
+        <button class="blog-link-row" id="blogLinkRow" type="button">
+          <span><b>From the Blog</b><small>Guides for safe, fast top-ups.</small></span>
+          <span class="blog-link-arrow" aria-hidden="true">\u2192</span>
+        </button>
 
         <!-- ================= FAQ & SUPPORT ================= -->
         <section id="faq" aria-label="Frequently asked questions and support">
@@ -1574,6 +1565,29 @@
           </div>
         </section>
 
+       </div>
+       <!-- ================= BLOG (separate page) ================= -->
+       <div id="blogView" hidden>
+         <button class="back-btn" id="blogViewBack" type="button">
+           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-7-7 7 7 7"/></svg>
+           Back to store
+         </button>
+         <div class="sec-head">
+           <div>
+             <h2>From the Blog</h2>
+             <p>Guides for safe, fast top-ups.</p>
+           </div>
+         </div>
+         <div class="blog-grid" id="blogGrid"></div>
+          <article class="blog-post" id="blogPost" hidden>
+            <button class="back-btn" id="blogBackBtn" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-7-7 7 7 7"/></svg>
+              All posts
+            </button>
+            <p class="blog-tag" id="blogPostTag"></p>
+            <h2 id="blogPostTitle"></h2>
+            <div id="blogPostBody"></div>
+          </article>
        </div>
       </div>
 
@@ -1917,9 +1931,26 @@
                 <option value="cyber">Cyber</option>
               </select>
             </div>
+            <div class="admin-field">
+              <label for="admSlideSecs">Banner slide timing (seconds)</label>
+              <input id="admSlideSecs" type="number" min="2" max="60" step="1" inputmode="numeric" placeholder="e.g. 5" />
+            </div>
             <div class="admin-field full">
               <label for="admNote">Support note (shown in the order summary)</label>
               <textarea id="admNote"></textarea>
+            </div>
+            <div class="admin-field full">
+              <label for="admMoveText">Moving banner text (scrolls below the highlight circles — leave empty to hide it)</label>
+              <input id="admMoveText" placeholder="e.g. WELCOME TO MLBB STORE \u2022 Fast & safe top-ups \u2022 Open 24/7" />
+            </div>
+            <div class="admin-field full">
+              <label>Categories — filter chips on the homepage</label>
+              <div id="adminCats"></div>
+              <div style="display:flex;gap:.5rem;margin-top:.5rem">
+                <input id="adminCatNew" placeholder="New category name, e.g. Special" />
+                <button class="admin-add" id="adminCatAdd" type="button">Add category</button>
+              </div>
+              <p class="img-upload-note" style="margin-top:.4rem">All Games always stays. Removing a category hides its chip — its games still show under All Games. Save settings to publish.</p>
             </div>
             <div class="admin-field full">
               <label for="admResellerTitle">Reseller section heading (on the homepage, near FAQ)</label>
@@ -2542,6 +2573,18 @@
         row.hidden = false;
       }
       var bannerSlideIdx = 0, bannerSlideCount = 0, bannerSlideTimer = null;
+      var BANNER_SLIDE_SECS = 4.5;
+      var MOVE_BANNER_TEXT = "WELCOME TO MLBB STORE \u2022 Fast & safe top-ups \u2022 Delivery by game ID \u2022 Open 24/7";
+      function renderMoveBanner() {
+        var bar = document.getElementById("moveBanner");
+        var track = document.getElementById("moveTrack");
+        if (!bar || !track) return;
+        var text = String(MOVE_BANNER_TEXT || "").trim();
+        if (!text) { bar.style.display = "none"; return; }
+        bar.style.display = "";
+        var item = "<span>" + esc(text) + "</span>";
+        track.innerHTML = item + item + item + item;
+      }
       function goBannerSlide(i) {
         var row = document.getElementById("bannerRow"); if (!row) return;
         var track = row.querySelector(".bslider-track"); if (!track || !bannerSlideCount) return;
@@ -2554,7 +2597,7 @@
       function startBannerAuto() {
         stopBannerAuto();
         if (bannerSlideCount > 1 && !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
-          bannerSlideTimer = setInterval(function () { if (!document.hidden) goBannerSlide(bannerSlideIdx + 1); }, 4500);
+          bannerSlideTimer = setInterval(function () { if (!document.hidden) goBannerSlide(bannerSlideIdx + 1); }, Math.round(BANNER_SLIDE_SECS * 1000));
         }
       }
       function bindBannerSlider(row) {
@@ -2577,6 +2620,7 @@
         }, { passive: true });
       }
       function renderHighlights() {
+        renderMoveBanner();
         var row = document.getElementById("highlightRow");
         if (!row) return;
         var list = (HIGHLIGHTS || []).filter(function (h) {
@@ -2650,6 +2694,10 @@
         });
         var back = document.getElementById("blogBackBtn");
         if (back) back.addEventListener("click", closeBlogPost);
+        var vb = document.getElementById("blogViewBack");
+        if (vb) vb.addEventListener("click", closeBlogView);
+        var lr = document.getElementById("blogLinkRow");
+        if (lr) lr.addEventListener("click", openBlogView);
       }
       function openBlogPost(i) {
         var p = BLOG_POSTS[i];
@@ -2659,13 +2707,37 @@
         document.getElementById("blogPostBody").innerHTML = p.body.map(function (para) { return "<p>" + esc(para) + "</p>"; }).join("");
         document.getElementById("blogGrid").hidden = true;
         document.getElementById("blogPost").hidden = false;
-        document.getElementById("blog").scrollIntoView();
+        window.scrollTo(0, 0);
       }
       function closeBlogPost() {
         document.getElementById("blogPost").hidden = true;
         document.getElementById("blogGrid").hidden = false;
-        document.getElementById("blog").scrollIntoView();
+        window.scrollTo(0, 0);
       }
+      function openBlogView() {
+        Array.prototype.forEach.call(document.querySelectorAll(".store-view"), function (el) { el.hidden = true; });
+        var bv = document.getElementById("blogView");
+        if (bv) bv.hidden = false;
+        window.scrollTo(0, 0);
+        if (window.location.hash !== "#blog") window.location.hash = "blog";
+      }
+      function closeBlogView() {
+        var bv = document.getElementById("blogView");
+        if (bv) bv.hidden = true;
+        var pn = document.getElementById("productNav");
+        if (!pn || pn.hidden) {
+          Array.prototype.forEach.call(document.querySelectorAll(".store-view"), function (el) { el.hidden = false; });
+        }
+        window.scrollTo(0, 0);
+        if (window.location.hash === "#blog") history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+      window.addEventListener("hashchange", function () {
+        var bv = document.getElementById("blogView");
+        if (window.location.hash !== "#blog" && bv && !bv.hidden) closeBlogView();
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('a[href="#top"]'), function (a) {
+        a.addEventListener("click", function () { closeBlogView(); });
+      });
       function syncCurrencyUI() {
         /* ₹ only — no currency toggle. Keeps the games subtitle and any
            hero price line in ₹, and is safe if called elsewhere. */
@@ -2685,7 +2757,7 @@
           var inQuery = !q || (g.name + " " + g.sub + " " + g.region).toLowerCase().indexOf(q) > -1;
           return inFilter && inQuery;
         });
-        countPill.textContent = list.length + (list.length === 1 ? " Game" : " Ready");
+        if (countPill) countPill.textContent = list.length + (list.length === 1 ? " Game" : " Ready");
         if (!list.length) {
           grid.innerHTML = '<div class="empty">No games match that search. Try “MLBB”, “PUBG” or a region like “Brazil”.</div>';
           return;
@@ -3421,6 +3493,73 @@
         } else { done(); }
       });
 
+      function renderCats() {
+        var tabs = document.getElementById("filterTabs");
+        var menu = document.getElementById("filterMenu");
+        if (!CATS.some(function (c) { return c[0] === state.filter; })) state.filter = "all";
+        if (tabs) {
+          tabs.innerHTML = CATS.map(function (c) {
+            return '<button class="tab' + (state.filter === c[0] ? " active" : "") + '" type="button" data-filter="' + esc(c[0]) + '">' + esc(c[1]) + "</button>";
+          }).join("");
+          Array.prototype.forEach.call(tabs.querySelectorAll(".tab"), function (tab) {
+            tab.addEventListener("click", function () { setFilter(tab.getAttribute("data-filter")); });
+          });
+        }
+        if (menu) {
+          menu.innerHTML = CATS.map(function (c) {
+            return '<button type="button" data-mfilter="' + esc(c[0]) + '"' + (state.filter === c[0] ? ' class="active"' : "") + ">" + esc(c[1]) + ' <svg class="fm-check" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 12.5 5 5 10-11"/></svg></button>';
+          }).join("");
+          Array.prototype.forEach.call(menu.querySelectorAll("[data-mfilter]"), function (b) {
+            b.addEventListener("click", function () {
+              setFilter(b.getAttribute("data-mfilter"));
+              closeFilterMenu();
+              document.getElementById("games").scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+          });
+        }
+      }
+      function renderAdminCats() {
+        var wrap = document.getElementById("adminCats");
+        if (!wrap || !adminData) return;
+        if (!Array.isArray(adminData.categories)) adminData.categories = CATS.map(function (c) { return [c[0], c[1]]; });
+        wrap.innerHTML = adminData.categories.map(function (c, i) {
+          var locked = c[0] === "all";
+          return '<div style="display:flex;gap:.5rem;margin-top:.5rem;align-items:center">' +
+            '<input data-cat-label="' + i + '" value="' + esc(c[1]) + '" aria-label="Category name" />' +
+            (locked ? '<span class="img-upload-note">Always stays</span>' : '<button class="ap-del" type="button" data-cat-del="' + i + '" aria-label="Remove category">\u2715</button>') +
+            "</div>";
+        }).join("");
+        Array.prototype.forEach.call(wrap.querySelectorAll("[data-cat-label]"), function (inp) {
+          inp.addEventListener("input", function () {
+            var idx = parseInt(inp.getAttribute("data-cat-label"), 10);
+            if (adminData.categories[idx]) adminData.categories[idx][1] = inp.value;
+          });
+        });
+        Array.prototype.forEach.call(wrap.querySelectorAll("[data-cat-del]"), function (btn) {
+          btn.addEventListener("click", function () {
+            adminData.categories.splice(parseInt(btn.getAttribute("data-cat-del"), 10), 1);
+            renderAdminCats();
+          });
+        });
+      }
+      (function bindAdminCatAdd() {
+        var addBtn = document.getElementById("adminCatAdd");
+        var newInp = document.getElementById("adminCatNew");
+        if (!addBtn || !newInp) return;
+        addBtn.addEventListener("click", function () {
+          if (!adminData) return;
+          var label = newInp.value.trim();
+          if (!label) { setAdminStatus("Type a category name first.", "err"); return; }
+          var id = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+          if (!id || id === "all") { setAdminStatus("That name can't be a category \u2014 try another.", "err"); return; }
+          if (!Array.isArray(adminData.categories)) adminData.categories = CATS.map(function (c) { return [c[0], c[1]]; });
+          var dup = adminData.categories.some(function (c) { return c[0] === id; });
+          if (dup) { setAdminStatus("That category already exists.", "err"); return; }
+          adminData.categories.push([id, label]);
+          newInp.value = "";
+          renderAdminCats();
+        });
+      })();
       /* ==================== FILTERS / SEARCH / QUICK ==================== */
       Array.prototype.forEach.call(document.querySelectorAll("#filterTabs .tab"), function (tab) {
         tab.addEventListener("click", function () {
@@ -3552,6 +3691,7 @@
         e.stopPropagation();
         /* Opens the dedicated full-screen Account page (openAuthPanel
            now shows that page, not the old dropdown overlay). */
+        if (typeof closeBlogView === "function") closeBlogView();
         openAuthPanel();
       });
       /* Bottom-nav Home returns to the homepage: if the Account page is
@@ -3565,6 +3705,7 @@
       if (bottomSupportLink) bottomSupportLink.addEventListener("click", function (e) {
         e.preventDefault();
         closeProduct();
+        if (typeof closeBlogView === "function") closeBlogView();
         var faqEl = document.getElementById("faq");
         if (faqEl) faqEl.scrollIntoView({ behavior: "smooth", block: "start" });
       });
@@ -4081,6 +4222,9 @@
           games: GAMES,
           waNumber: WA_NUMBER,
           theme: THEMES[themeIdx].id,
+          bannerSlideSecs: BANNER_SLIDE_SECS,
+          moveBannerText: MOVE_BANNER_TEXT,
+          categories: CATS,
           supportNote: SUPPORT_NOTE,
           banners: BANNERS,
           faqs: FAQS,
@@ -4113,6 +4257,9 @@
           var fn = document.getElementById("faqSupportNote");
           if (fn) fn.textContent = SUPPORT_NOTE;
         }
+        if (typeof d.bannerSlideSecs === "number" && isFinite(d.bannerSlideSecs)) BANNER_SLIDE_SECS = Math.min(60, Math.max(2, d.bannerSlideSecs));
+        if (d.moveBannerText !== undefined) { MOVE_BANNER_TEXT = d.moveBannerText; renderMoveBanner(); }
+        if (Array.isArray(d.categories) && d.categories.length) { CATS = d.categories.filter(function (c) { return Array.isArray(c) && c.length >= 2 && c[0] && c[1]; }).map(function (c) { return [String(c[0]), String(c[1])]; }); if (!CATS.some(function (c) { return c[0] === "all"; })) CATS.unshift(["all", "All Games"]); renderCats(); }
         if (Array.isArray(d.banners)) { BANNERS = d.banners; renderBanners(); }
         if (Array.isArray(d.faqs)) { FAQS = d.faqs; renderFaqs(); }
         if (Array.isArray(d.highlights)) { HIGHLIGHTS = d.highlights; renderHighlights(); }
@@ -4162,6 +4309,9 @@
                 theme: s.theme || "",
                 supportNote: s.supportNote || "",
                 banners: Array.isArray(s.banners) ? s.banners : undefined,
+                bannerSlideSecs: (typeof s.bannerSlideSecs === "number" ? s.bannerSlideSecs : undefined),
+                moveBannerText: s.moveBannerText,
+                categories: Array.isArray(s.categories) ? s.categories : undefined,
                 faqs: Array.isArray(s.faqs) ? s.faqs : undefined,
                 highlights: Array.isArray(s.highlights) ? s.highlights : undefined,
                 logo: s.logo !== undefined ? s.logo : undefined,
@@ -4177,7 +4327,7 @@
 
       /* ---------- Admin editor ---------- */
       var adminGameSel = "all"; /* Games tab selector: "all" or a game index */
-      var HL_CATS = [["all", "All Games"], ["mlbb", "MLBB"], ["pubg", "PUBG Mobile"], ["bundles", "Bundles"], ["vip", "VIP"], ["more", "More Games"]];
+      var CATS = [["all", "All Games"], ["mlbb", "MLBB"], ["pubg", "PUBG Mobile"], ["bundles", "Bundles"], ["vip", "VIP"], ["more", "More Games"]];
       function renderAdminHighlights() {
         var wrap = document.getElementById("adminHighlights");
         if (!wrap || !adminData) return;
@@ -4194,7 +4344,7 @@
               return '<option value="' + esc(g.id) + '"' + (h.linkValue === g.id ? " selected" : "") + ">" + esc(g.name) + "</option>";
             }).join("") + "</select>";
           } else if (type === "category") {
-            target = '<select data-hf="linkValue" aria-label="Highlight category">' + HL_CATS.map(function (c) {
+            target = '<select data-hf="linkValue" aria-label="Highlight category">' + CATS.map(function (c) {
               return '<option value="' + c[0] + '"' + (h.linkValue === c[0] ? " selected" : "") + ">" + c[1] + "</option>";
             }).join("") + "</select>";
           } else {
@@ -4228,6 +4378,9 @@
       function renderAdminEditor() {
         document.getElementById("admWa").value = adminData.waNumber || "";
         document.getElementById("admTheme").value = adminData.theme || "violet";
+        document.getElementById("admSlideSecs").value = (typeof adminData.bannerSlideSecs === "number" ? adminData.bannerSlideSecs : 4.5);
+        document.getElementById("admMoveText").value = adminData.moveBannerText || "";
+        renderAdminCats();
         document.getElementById("admNote").value = adminData.supportNote || "";
         var _rt = document.getElementById("admResellerTitle");
         if (_rt) _rt.value = adminData.resellerTitle || "";
@@ -4275,9 +4428,9 @@
         syncBulkScope();
         adminGamesEl.innerHTML = adminData.games.map(function (g, gi) {
           if (adminGameSel !== "all" && parseInt(adminGameSel, 10) !== gi) return "";
-          var catOpts = [["mlbb", "MLBB"], ["pubg", "PUBG Mobile"], ["bundles", "Bundles"], ["vip", "VIP"], ["more", "More Games"]].map(function (c) {
+          var catOpts = CATS.filter(function (c) { return c[0] !== "all"; }).map(function (c) {
             return '<option value="' + c[0] + '"' + (g.cat === c[0] ? " selected" : "") + ">" + c[1] + "</option>";
-          }).join("");
+          }).join("") || '<option value="" disabled>No categories yet \u2014 add one in Store settings</option>';
           var packs = g.packs.map(function (p, pi) {
             return '<div class="apack" data-pi="' + pi + '">' +
               '<input data-pf="amt" value="' + esc(p.amt) + '" placeholder="Pack name" aria-label="Pack name" />' +
@@ -4321,7 +4474,9 @@
         if (!adminData) return;
         if (t.id === "admWa") { adminData.waNumber = t.value; return; }
         if (t.id === "admNote") { adminData.supportNote = t.value; return; }
+        if (t.id === "admMoveText") { adminData.moveBannerText = t.value; return; }
         if (t.id === "admTheme") { adminData.theme = t.value; return; }
+        if (t.id === "admSlideSecs") { var v = parseFloat(t.value); adminData.bannerSlideSecs = (isFinite(v) ? Math.min(60, Math.max(2, v)) : 4.5); return; }
         if (t.id === "admLogo") { adminData.logo = t.value; return; }
         if (t.id === "admFavicon") { adminData.favicon = t.value; return; }
         if (t.id === "admResellerTitle") { adminData.resellerTitle = t.value; return; }
@@ -4606,7 +4761,7 @@
          message naming that section, and no silent fallback is used.
          PREVIEW FIRST: the plan is computed and shown in a table, and
          nothing is written until Apply is tapped. Apply writes into
-         adminData and saves through saveAdminStore — the same
+         adminData and saves through saveAdminPartial — the same
          PUT /api/admin/store flow as every other admin save, so no new
          endpoint is needed. Packs with no Busan product linked, or
          whose product is missing from the catalogue, are listed as
@@ -4959,7 +5114,7 @@
         clearBulkPreview();
         bulkMsg("");
         renderAdminEditor();
-        saveAdminStore(e.applyBtn);
+        saveAdminPartial(e.applyBtn, gamesPatch());
       }
       (function initBulkPrices() {
         var e = bulkEls();
@@ -5100,8 +5255,7 @@
          adminData object, so a save always sends the full store —
          saving one section can never wipe the others, and unsaved edits
          made in another tab are kept. */
-      function saveAdminStore(btn) {
-        if (!adminData) return;
+      function gamesPatch() {
         /* Reseller-price rule: a pack saved without a reseller price
            gets its regular price AS the reseller price — never blank,
            never ₹0. Packs that already have one keep it untouched. */
@@ -5110,12 +5264,19 @@
             if (!packHasResellerPrice(p)) p.resellerPrice = Number(p.price || 0);
           });
         });
+        return { games: adminData.games };
+      }
+      function settingsPatch() {
+        return { waNumber: adminData.waNumber, theme: adminData.theme, supportNote: adminData.supportNote, resellerTitle: adminData.resellerTitle, resellerText: adminData.resellerText, logo: adminData.logo, favicon: adminData.favicon, moveBannerText: adminData.moveBannerText, bannerSlideSecs: adminData.bannerSlideSecs, categories: adminData.categories };
+      }
+      function saveAdminPartial(btn, patch) {
+        if (!adminData) return;
         btn.disabled = true;
         setAdminStatus("Saving…");
-        fetch(AUTH_API + "/api/admin/store", {
+        fetch(AUTH_API + "/api/admin/partial", {
           method: "PUT",
           headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getToken() },
-          body: JSON.stringify(adminData)
+          body: JSON.stringify(patch)
         })
           .then(function (r) {
             return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; });
@@ -5134,9 +5295,17 @@
             setAdminStatus("Could not reach the server. Check your connection and try again.", "err");
           });
       }
-      ["adminSaveSettings", "adminSaveBanners", "adminSaveFaqs", "adminSaveHighlights", "adminSaveGames", "adminSaveSeo"].forEach(function (id) {
+      var adminSavePatches = {
+        adminSaveSettings: settingsPatch,
+        adminSaveBanners: function () { return { banners: adminData.banners }; },
+        adminSaveFaqs: function () { return { faqs: adminData.faqs }; },
+        adminSaveHighlights: function () { return { highlights: adminData.highlights }; },
+        adminSaveGames: gamesPatch,
+        adminSaveSeo: function () { return { seo: adminData.seo }; }
+      };
+      Object.keys(adminSavePatches).forEach(function (id) {
         var b = document.getElementById(id);
-        if (b) b.addEventListener("click", function () { saveAdminStore(b); });
+        if (b) b.addEventListener("click", function () { saveAdminPartial(b, adminSavePatches[id]()); });
       });
       /* SEO tab copy / reset buttons (no-ops if the tab markup is absent). */
       (function initSeoButtons() {
@@ -5949,6 +6118,7 @@
       selectGame("mlbb-in", false);
       renderFaqs();
       renderBlog();
+      if (window.location.hash === "#blog") openBlogView();
       syncCurrencyUI();
       applyBranding();
       applySeo();
