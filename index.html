@@ -263,6 +263,7 @@
         background:transparent; border:1px solid var(--border); color:#fb7185; border-radius:999px;
         padding:.42rem .85rem; font-weight:800; font-size:.78rem;
       }
+      .admin-move{background:transparent;border:1px solid var(--border);color:var(--foreground);border-radius:999px;padding:.42rem .7rem;font-weight:800;font-size:.85rem}
       .admin-del:hover{border-color:#f43f5e}
       .apack{display:grid; grid-template-columns:1.35fr .62fr .72fr .9fr 1.25fr auto; gap:.5rem; margin-bottom:.5rem; align-items:center}
       .reseller-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.62rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent);border-radius:999px;padding:.22rem .55rem;margin-top:.35rem}
@@ -4522,6 +4523,8 @@
           return '<section class="agame" data-gi="' + gi + '">' +
             '<div class="agame-head"><b>' + esc(g.name) + "</b>" +
               '<label class="admin-toggle"><input type="checkbox" data-f="hidden"' + (g.hidden ? " checked" : "") + " /> Hidden</label>" +
+              '<button class="admin-move" type="button" data-act="move-game-up" aria-label="Move game up in grid"' + (gi === 0 ? ' disabled' : '') + '>\u2191</button>' +
+              '<button class="admin-move" type="button" data-act="move-game-down" aria-label="Move game down in grid"' + (gi === adminData.games.length - 1 ? ' disabled' : '') + '>\u2193</button>' +
               '<button class="admin-del" type="button" data-act="del-game">Delete game</button>' +
             "</div>" +
             '<div class="admin-grid">' +
@@ -5294,6 +5297,22 @@
           adminData.games.splice(gi, 1);
           adminGameSel = "all";
           renderAdminEditor();
+        } else if (act === "move-game-up") {
+          if (gi > 0) {
+            var upTmp = adminData.games[gi - 1];
+            adminData.games[gi - 1] = adminData.games[gi];
+            adminData.games[gi] = upTmp;
+            if (adminGameSel !== "all") adminGameSel = String(gi - 1);
+            renderAdminEditor();
+          }
+        } else if (act === "move-game-down") {
+          if (gi < adminData.games.length - 1) {
+            var dnTmp = adminData.games[gi + 1];
+            adminData.games[gi + 1] = adminData.games[gi];
+            adminData.games[gi] = dnTmp;
+            if (adminGameSel !== "all") adminGameSel = String(gi + 1);
+            renderAdminEditor();
+          }
         }
       });
       document.getElementById("adminAddGame").addEventListener("click", function () {
