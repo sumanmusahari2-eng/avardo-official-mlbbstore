@@ -4532,6 +4532,14 @@
               adminImageFld(g) +
               adminFld("Region", "region", g.region) +
               adminFld("Monogram (1–2 characters)", "mono", g.mono) +
+              '<div class="admin-field"><label>Tag style</label><select data-f="badge">' +
+                '<option value=""' + (!g.badge ? " selected" : "") + ">None \u2014 no tag</option>" +
+                '<option value="hot"' + (g.badge === "hot" ? " selected" : "") + ">Hot \u2014 orange</option>" +
+                '<option value="best"' + (g.badge === "best" ? " selected" : "") + ">Best \u2014 accent colour</option>" +
+                '<option value="new"' + (g.badge === "new" ? " selected" : "") + ">New \u2014 green</option>" +
+                '<option value="off"' + (g.badge === "off" ? " selected" : "") + ">Sale \u2014 pink</option>" +
+              "</select></div>" +
+              adminFld("Tag text", "badgeText", g.badgeText || "") +
               '<div class="admin-field"><label>Category</label><select data-f="cat">' + catOpts + "</select></div>" +
               '<div class="admin-field"><label>Zone ID</label><select data-f="needsZone">' +
                 '<option value="yes"' + (g.needsZone ? " selected" : "") + ">Asked — User ID + Zone ID</option>" +
