@@ -702,6 +702,9 @@
       .pay-modes-rule{width:44px;height:3px;border-radius:99px;background:var(--muted);opacity:.5;margin:.6rem auto 1rem}
       .pay-modes-row{display:flex;justify-content:center;align-items:stretch;gap:.7rem;flex-wrap:wrap}
       .pay-box{width:76px;min-height:76px;background:var(--card);border:1px solid var(--border);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35rem;padding:.5rem .2rem}
+      .pay-modes-row .pay-box{animation:pay-spin 6s linear infinite}
+      @keyframes pay-spin{to{transform:rotate(360deg)}}
+      @media (prefers-reduced-motion:reduce){.pay-modes-row .pay-box{animation:none}}
       .pay-badge{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
       .pay-label{font-size:.56rem;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);line-height:1;white-space:nowrap}
       .pay-badge--phonepe{background:#5f259f;color:#fff;font-size:1.4rem;font-weight:800;line-height:1}
