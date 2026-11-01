@@ -680,6 +680,15 @@
       #upiMobileField{margin-top:.8rem}
       .upi-pay-btn{margin:0 0 .55rem}
 
+            /* ============ INFO PAGES ============ */
+      .info-body{line-height:1.7; font-weight:500}
+      .info-body h3{margin:1.2rem 0 .4rem; font-size:1.02rem}
+      .info-body h3:first-child{margin-top:0}
+      .info-body p{margin:.4rem 0; color:var(--muted)}
+      .info-body ul{margin:.4rem 0 .8rem 1.1rem; color:var(--muted); display:grid; gap:.35rem}
+      .info-body .info-input{width:100%; padding:.7rem .9rem; border:1px solid var(--border-soft); border-radius:.7rem; background:var(--surface); color:inherit; font-size:1rem; font-weight:600}
+      .info-body .info-row{display:flex; gap:.6rem; margin-top:.7rem}
+      .info-body .info-row .btn{flex:1; text-align:center}
       /* ============ FOOTER ============ */
       footer{margin-top:3.5rem; border-top:1px solid var(--border-soft); background:var(--surface)}
       .foot-grid{display:grid; gap:2rem; padding:2.5rem 0 1.8rem}
@@ -1624,10 +1633,13 @@
             <div>
               <h4>Support</h4>
               <ul>
+                <li><a href="#info-support">Support</a></li>
                 <li><a id="waSupportLink" href="#topup">WhatsApp support</a></li>
-                <li><a href="#topup">Track a top-up</a></li>
-                <li><a href="#support">Refund policy</a></li>
-                <li><a href="#support">Contact</a></li>
+                <li><a href="#info-track">Track a top-up</a></li>
+                <li><a href="#info-refund">Refund policy</a></li>
+                <li><a href="#info-privacy">Privacy policy</a></li>
+                <li><a href="#info-about">About us</a></li>
+                <li><a href="#info-contact">Contact us</a></li>
               </ul>
             </div>
           </div>
@@ -1834,6 +1846,13 @@
       <div class="overlay-in">
         <div class="admin-head"><div><h2 id="trackTitle">Order tracking</h2><p id="trackSub"></p></div><button class="admin-close" id="trackClose" type="button">← Back to orders</button></div>
         <div id="trackBody"></div>
+      </div>
+    </div>
+        <!-- INFO PAGES (Support / Track / Refund / Privacy / About / Contact) -->
+    <div class="overlay" id="infoOverlay" hidden role="dialog" aria-label="Information page">
+      <div class="overlay-in">
+        <div class="admin-head"><div><h2 id="infoTitle">Support</h2><p id="infoSub"></p></div><button class="admin-close" id="infoClose" type="button">← Back</button></div>
+        <div class="info-body" id="infoBody"></div>
       </div>
     </div>
     <!-- REGION CHECKER -->
@@ -3313,17 +3332,12 @@
         var waLink = document.getElementById("waSupportLink");
         var faqBtn = document.getElementById("faqWaBtn");
         var resellerBtn = document.getElementById("resellerWaBtn");
+        var waNum = WA_NUMBER || "919366077306";
         [waLink, faqBtn, resellerBtn].forEach(function (el) {
           if (!el) return;
-          if (WA_NUMBER) {
-            el.href = "https://wa.me/" + WA_NUMBER;
-            el.target = "_blank";
-            el.rel = "noopener";
-          } else {
-            el.href = "#topup";
-            el.removeAttribute("target");
-            el.removeAttribute("rel");
-          }
+          el.href = "https://wa.me/" + waNum;
+          el.target = "_blank";
+          el.rel = "noopener";
         });
         /* Chat-bot WhatsApp buttons follow the same number. */
         Array.prototype.forEach.call(document.querySelectorAll("[data-bot-wa]"), function (el) {
@@ -5648,6 +5662,118 @@
       });
       document.getElementById("trackClose").addEventListener("click", function(){ document.getElementById("trackOverlay").hidden = true; if (document.getElementById("ordersOverlay").hidden) document.body.style.overflow = ""; });
 
+      
+      /* ---- Info pages (footer: Support / Track / Refund / Privacy / About / Contact) ---- */
+      function storeWaNumber() { return (typeof WA_NUMBER !== "undefined" && WA_NUMBER) ? WA_NUMBER : "919366077306"; }
+      function infoPageData(key) {
+        var waBtn = '<p><a class="btn btn-accent" data-info-wa href="https://wa.me/919366077306" target="_blank" rel="noopener">Chat on WhatsApp</a></p>';
+        if (key === "support") return { title: "Support", sub: "Help with orders, delivery and refunds.", html:
+          '<p><b>Need help with an order?</b> Message us on WhatsApp with your order code and the game ID you entered, and support will check it.</p>' + waBtn +
+          '<h3>Track a top-up</h3><p>Enter your order code on the <a href="#info-track">Track a top-up</a> page to see its status — placed, paid and delivered.</p>' +
+          '<h3>Refunds</h3><p>Read the <a href="#info-refund">Refund policy</a> — if a paid order cannot be delivered, we re-deliver or refund it.</p>' +
+          '<h3>Common questions</h3><p>Delivery, payment methods and region questions are answered in the <a href="#faq" data-info-faq>FAQ section</a> on the home page.</p>' };
+        if (key === "track") return { title: "Track a top-up", sub: "Check an order by its code.", html:
+          '<p>Every signed-in order gets a code (for example ML-12). Enter it below to see its timeline.</p>' +
+          '<input id="trackCodeInput" class="info-input" type="text" placeholder="Order code, e.g. ML-12" autocomplete="off">' +
+          '<div class="info-row"><button type="button" class="check-btn" id="trackCodeBtn">Track order</button></div>' +
+          '<div id="trackCodeResult"></div>' +
+          '<p>Tracking only shows orders from your own account, so sign in first. Not signed in? Message us on WhatsApp and support will check your order.</p>' + waBtn };
+        if (key === "refund") return { title: "Refund policy", sub: "When we re-deliver, and when we refund.", html:
+          '<h3>If a paid order cannot be delivered</h3><p>Contact support on WhatsApp with your order code and we will re-deliver or refund it.</p>' +
+          '<h3>Refunded orders</h3><p>A refunded order shows the <b>Refunded</b> status in My Orders. Refunds issued from the store are credited to your store wallet.</p>' +
+          '<h3>Wrong game ID</h3><p>Delivery goes to the User ID and Zone ID you enter at checkout, so double-check them before you pay. A pack delivered to a wrong ID you entered cannot be pulled back, and cannot be refunded.</p>' +
+          '<h3>Delivered packs</h3><p>Once a pack is delivered to the correct game ID, it cannot be refunded.</p>' +
+          '<h3>How to ask for a refund</h3><p>Message us on WhatsApp with your order code, the game and pack, and the ID you entered.</p>' + waBtn };
+        if (key === "privacy") return { title: "Privacy policy", sub: "What we collect, and what we never ask for.", html:
+          '<h3>What we collect</h3><ul><li>Your account email, if you create an account or sign in.</li><li>The game User ID and Zone ID you enter on an order, so the pack reaches the right account.</li><li>Your order history, so you can track top-ups in My Orders.</li></ul>' +
+          '<h3>What we never ask for</h3><p>We never ask for your game password or your UPI PIN. Delivery works by game ID only — anyone asking for your password is not us.</p>' +
+          '<h3>Payments</h3><p>UPI payments are processed through our payment gateway and WhatsApp orders are confirmed with support. We do not store your UPI PIN or card details.</p>' +
+          '<h3>On your device</h3><p>Sign-in stays on your device, and the store may cache the latest store data so repeat visits load faster.</p>' +
+          '<h3>Sharing</h3><p>We do not sell your personal data. It is used only to deliver orders, show your order history, and answer support messages.</p>' +
+          '<h3>Questions</h3><p>Message us on WhatsApp about any privacy question or deletion request.</p>' + waBtn };
+        if (key === "about") return { title: "About us", sub: "MLBB STORE — game top-ups by game ID.", html:
+          '<p><b>MLBB STORE</b> is an independent game top-up store. We deliver diamonds, UC and other in-game packs straight to your game account — fast, and by game ID only, so you never need to share your password.</p>' +
+          '<p>We focus on Mobile Legends: Bang Bang top-ups across regions — India, Philippines, Brazil, Global and more.</p>' +
+          '<p>We are an independent store and are not affiliated with Moonton or any game publisher.</p>' +
+          '<p>Questions? Our support team is on WhatsApp — see the <a href="#info-contact">Contact us</a> page.</p>' };
+        if (key === "contact") return { title: "Contact us", sub: "The fastest way to reach us is WhatsApp.", html:
+          '<p>Message us on WhatsApp for orders, delivery, refunds and anything else. If your question is about an order, include your order code and the game ID you entered.</p>' + waBtn +
+          '<h3>Before you message</h3><p>For order status, check the <a href="#info-track">Track a top-up</a> page first. For delivery and payment questions, the <a href="#faq" data-info-faq>FAQ section</a> may already have the answer.</p>' };
+        return null;
+      }
+      var INFO_KEYS = ["support", "track", "refund", "privacy", "about", "contact"];
+      function bindInfoPage(key) {
+        Array.prototype.forEach.call(document.querySelectorAll("#infoBody [data-info-wa]"), function (a) { a.href = "https://wa.me/" + storeWaNumber(); a.target = "_blank"; a.rel = "noopener"; });
+        Array.prototype.forEach.call(document.querySelectorAll("#infoBody [data-info-faq]"), function (a) { a.addEventListener("click", function () { closeInfoPage(); }); });
+        if (key === "track") {
+          var btn = document.getElementById("trackCodeBtn");
+          var inp = document.getElementById("trackCodeInput");
+          if (btn) btn.addEventListener("click", function () { trackByCode(); });
+          if (inp) inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); trackByCode(); } });
+        }
+      }
+      function trackByCode() {
+        var inp = document.getElementById("trackCodeInput");
+        var res = document.getElementById("trackCodeResult");
+        if (!inp || !res) return;
+        var code = inp.value.replace(/^\s+|\s+$/g, "").toUpperCase();
+        if (!code) { res.innerHTML = '<div class="empty-small">Enter an order code first.</div>'; return; }
+        if (typeof authUser === "undefined" || !authUser) { res.innerHTML = '<div class="empty-small">Sign in first — tracking only shows orders from your own account. Or message us on WhatsApp with your order code.</div>'; return; }
+        res.innerHTML = '<div class="empty-small">Looking up ' + esc(code) + '…</div>';
+        apiGet("/api/orders/me").then(function (r) {
+          if (!r.ok) { res.innerHTML = '<div class="empty-small">' + esc((r.d && r.d.error) || "Could not load orders.") + "</div>"; return; }
+          var orders = (r.d && r.d.orders) || r.d || [];
+          if (!Array.isArray(orders)) orders = [];
+          var found = null;
+          for (var i = 0; i < orders.length; i++) {
+            var c = "";
+            try { c = orderCode(orders[i]); } catch (e) { c = orders[i].code || ""; }
+            if (c && String(c).toUpperCase() === code) { found = orders[i]; break; }
+            if (orders[i].code && String(orders[i].code).toUpperCase() === code) { found = orders[i]; break; }
+          }
+          if (!found) { res.innerHTML = '<div class="empty-small">No order with code ' + esc(code) + ' was found in your account. Double-check the code, or message us on WhatsApp with it.</div>'; return; }
+          res.innerHTML = '<div class="empty-small">Found it — opening its timeline…</div>';
+          showTracking(found.id);
+        }).catch(function () { res.innerHTML = '<div class="empty-small">Could not reach the orders service.</div>'; });
+      }
+      function openInfoPage(key) {
+        var pg = infoPageData(key);
+        if (!pg) return;
+        document.getElementById("infoTitle").textContent = pg.title;
+        document.getElementById("infoSub").textContent = pg.sub || "";
+        document.getElementById("infoBody").innerHTML = pg.html;
+        var ov = document.getElementById("infoOverlay");
+        ov.hidden = false; ov.scrollTop = 0; document.body.style.overflow = "hidden";
+        if (window.location.hash !== "#info-" + key) window.location.hash = "info-" + key;
+        bindInfoPage(key);
+      }
+      function closeInfoPage() {
+        var ov = document.getElementById("infoOverlay");
+        if (ov) ov.hidden = true;
+        var ord = document.getElementById("ordersOverlay"); var trk = document.getElementById("trackOverlay"); var acc = document.getElementById("accountOverlay");
+        if ((!ord || ord.hidden) && (!trk || trk.hidden) && (!acc || acc.hidden)) document.body.style.overflow = "";
+        if (window.location.hash && window.location.hash.indexOf("#info-") === 0) history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+      document.getElementById("infoClose").addEventListener("click", function () { closeInfoPage(); });
+      document.getElementById("trackClose").addEventListener("click", function () {
+        var iv = document.getElementById("infoOverlay");
+        if (iv && !iv.hidden) document.body.style.overflow = "hidden";
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        var iv = document.getElementById("infoOverlay");
+        var trk = document.getElementById("trackOverlay");
+        if (iv && !iv.hidden && (!trk || trk.hidden)) closeInfoPage();
+      });
+      window.addEventListener("hashchange", function () {
+        var h = window.location.hash || "";
+        if (h.indexOf("#info-") === 0) { var k = h.slice(6); if (INFO_KEYS.indexOf(k) >= 0) openInfoPage(k); }
+        else { var ov = document.getElementById("infoOverlay"); if (ov && !ov.hidden) closeInfoPage(); }
+      });
+      (function () {
+        var h = window.location.hash || "";
+        if (h.indexOf("#info-") === 0 && INFO_KEYS.indexOf(h.slice(6)) >= 0) openInfoPage(h.slice(6));
+      })();
       /* ---- Admin tabs ---- */
       Array.prototype.forEach.call(document.querySelectorAll("[data-atab]"), function (btn) {
         btn.addEventListener("click", function(){
