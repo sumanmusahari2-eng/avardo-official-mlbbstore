@@ -599,6 +599,7 @@
       @media (min-width:640px){ .panel-head{padding-left:1.75rem; padding-right:1.75rem} }
       .panel-head h2{margin:0; font-size:1.25rem}
       .panel-head p{margin:.2rem 0 0; font-size:.83rem; color:var(--muted); font-weight:600}
+      .panel-head .panel-desc{margin:.55rem 0 0; font-size:.85rem; line-height:1.55; color:var(--muted); font-weight:500}
       .panel-body{display:grid; gap:0}
       @media (min-width:960px){ .panel-body{grid-template-columns:1.6fr 1fr} }
       .panel-form{padding:1.4rem 1.25rem}
@@ -1478,6 +1479,7 @@
           <div class="panel-head">
             <h2 id="panelTitle">Mobile Legends — India</h2>
             <p id="panelSub">Diamonds delivered by User ID · India server</p>
+            <p id="panelDesc" class="panel-desc" hidden></p>
           </div>
           <div class="panel-body">
             <div class="panel-form">
@@ -2900,6 +2902,7 @@
       var panelMono = document.getElementById("panelMono");
       var panelTitle = document.getElementById("panelTitle");
       var panelSub = document.getElementById("panelSub");
+      var panelDesc = document.getElementById("panelDesc");
       var packGrid = document.getElementById("packGrid");
       var packCount = document.getElementById("packCount");
       var uidInput = document.getElementById("uidInput");
@@ -2943,6 +2946,9 @@
         panelMono.textContent = g.mono;
         panelTitle.textContent = g.name;
         panelSub.textContent = g.sub + " · delivered by " + (g.needsZone ? "User ID + Zone ID" : "User ID (UID)");
+        var gd = (g.desc || "").trim();
+        panelDesc.textContent = gd;
+        panelDesc.hidden = !gd;
         zoneField.style.display = g.needsZone ? "" : "none";
         idHint.textContent = g.needsZone ? "Find it under your in-game avatar" : "Your UID is shown on your profile page";
         if (typeof clearCheckMsg === "function") clearCheckMsg();
@@ -4565,6 +4571,7 @@
               adminFld("Name", "name", g.name) +
               adminFld("Short name", "short", g.short) +
               adminFld("Subtitle", "sub", g.sub, "full") +
+              '<div class="admin-field full"><label>Description</label><textarea data-f="desc" rows="3" placeholder="e.g. Get MLBB diamonds instantly on your India server account — delivered by User ID in minutes.">' + esc(g.desc || "") + '</textarea></div>' +
               adminImageFld(g) +
               adminBannerFld(g) +
               adminFld("Region", "region", g.region) +
