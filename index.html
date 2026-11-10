@@ -2973,7 +2973,7 @@
       /* ==================== PRODUCT PAGE (panel opens only on a product tap) ==================== */
       var panelEl = document.getElementById("topup");
       var productNav = document.getElementById("productNav");
-      function openProduct(id) {
+      function openProduct(id, urlMode) {
         var g = GAMES.filter(function (x) { return x.id === id; })[0];
         if (!g || g.hidden) return;
         selectGame(id, false);
@@ -2982,15 +2982,48 @@
         panelEl.hidden = false;
         document.body.classList.add("in-product");
         window.scrollTo(0, 0);
+        gameUrl(id, urlMode === undefined ? "push" : urlMode);
       }
-      function closeProduct() {
+      function closeProduct(urlMode) {
         Array.prototype.forEach.call(document.querySelectorAll(".store-view"), function (el) { el.hidden = false; });
         productNav.hidden = true;
         panelEl.hidden = true;
         document.body.classList.remove("in-product");
+        if (urlMode) gameUrl(null, urlMode);
       }
+      /* ==================== PRODUCT URL (?game=…) ====================
+         The address bar follows the product: tapping a game sets
+         ?game=<id> (shareable, and the phone Back button returns to
+         the grid); going back to All games clears it. Deep links and
+         Back/Forward reuse the same helpers so they never add
+         history entries of their own. */
+      function gameUrl(id, mode) {
+        try {
+          var u = new URL(window.location.href);
+          if (id) u.searchParams.set("game", id); else u.searchParams.delete("game");
+          var next = u.pathname + u.search + u.hash;
+          if (mode === "push" && window.history && history.pushState) history.pushState(null, "", next);
+          else if (mode === "replace" && window.history && history.replaceState) history.replaceState(null, "", next);
+        } catch (e) {}
+      }
+      function openGameFromUrl(mode, allowClear) {
+        var id = null;
+        try { id = new URLSearchParams(window.location.search).get("game"); } catch (e) {}
+        if (!id) return false;
+        var g = GAMES.filter(function (x) { return x.id === id && !x.hidden; })[0];
+        if (!g) { if (allowClear) gameUrl(null, "replace"); return false; }
+        if (!panelEl.hidden && state.game && state.game.id === id) return true;
+        openProduct(id, mode);
+        return true;
+      }
+      window.addEventListener("popstate", function () {
+        var id = null;
+        try { id = new URLSearchParams(window.location.search).get("game"); } catch (e) {}
+        if (id) openGameFromUrl("none", false);
+        else if (!panelEl.hidden) closeProduct("none");
+      });
       document.getElementById("backBtn").addEventListener("click", function () {
-        closeProduct();
+        closeProduct("push");
         document.getElementById("games").scrollIntoView({ behavior: "smooth", block: "start" });
       });
       /* Every "Top-Up" link opens the product page for the current game
@@ -3004,7 +3037,7 @@
       });
       /* Home / Games links leave the product page and return to the store. */
       Array.prototype.forEach.call(document.querySelectorAll('a[href="#games"], a[href="#top"]'), function (a) {
-        a.addEventListener("click", function () { closeProduct(); });
+        a.addEventListener("click", function () { closeProduct("push"); });
       });
 
       function renderPacks() {
@@ -4439,6 +4472,10 @@
                 resellerText: s.resellerText || undefined,
                 seo: s.seo !== undefined ? s.seo : undefined
               });
+              /* A shared product link (?game=…) may name a game that only
+                 exists in the live catalogue — open it now that the
+                 remote data is in (clears a bad id from the bar). */
+              if (typeof openGameFromUrl === "function") openGameFromUrl("replace", true);
             }
           })
           .catch(function () {});
@@ -6590,6 +6627,10 @@
       applySeo();
       renderReseller();
       loadRemoteStore();
+      /* A shared product link (?game=…) opens that game on load;
+         the live catalogue may add games the built-in list lacks,
+         so loadRemoteStore re-checks the link once it lands. */
+      if (typeof openGameFromUrl === "function") openGameFromUrl("replace", false);
       loadBestSellers();
       handlePaymentReturn();
     </script>
