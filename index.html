@@ -68,6 +68,15 @@
         --chip:#1f0709; --shadow:0 18px 50px rgba(0,0,0,.55);
         --glow:rgba(239,68,68,.30);
       }
+      html[data-theme="rosered"]{
+        --background:#140308; --surface:#210709; --card:#270a0d; --card-2:#33101a;
+        --foreground:#fff1f2; --muted:#e5a8b5; --faint:#9c6673;
+        --accent:#f43f5e; --accent-strong:#e11d48; --accent-ink:#ffffff;
+        --border:#4a1620; --border-soft:#33101a;
+        --hero-a:#2e0810; --hero-b:#9f1239; --hero-c:#e11d48;
+        --chip:#270a0d; --shadow:0 18px 50px rgba(0,0,0,.55);
+        --glow:rgba(244,63,94,.32);
+      }
 
       *{box-sizing:border-box}
       html{scroll-behavior:smooth}
@@ -375,6 +384,7 @@
       .hero p{margin:0; color:var(--muted); font-size:.98rem; line-height:1.6; max-width:46ch; font-weight:500}
       html[data-theme="dark"] .hero p, html[data-theme="violet"] .hero p, html[data-theme="cyber"] .hero p{color:#c3d5e2}
       html[data-theme="redmoon"] .hero p{color:#f2c9c9}
+      html[data-theme="rosered"] .hero p{color:#f6cdd6}
       .hero-ctas{display:flex; flex-wrap:wrap; gap:.6rem; margin-top:1.35rem}
       .btn{
         display:inline-flex; align-items:center; gap:.5rem; border-radius:999px; font-weight:800; font-size:.88rem;
@@ -389,6 +399,7 @@
       .hero-stats div span{font-size:.72rem; font-weight:700; letter-spacing:.08em; color:var(--muted); text-transform:uppercase}
       html[data-theme="dark"] .hero-stats div span, html[data-theme="violet"] .hero-stats div span, html[data-theme="cyber"] .hero-stats div span{color:#9db4c4}
       html[data-theme="redmoon"] .hero-stats div span{color:#d99a9a}
+      html[data-theme="rosered"] .hero-stats div span{color:#e0a3b0}
       .hero-art{display:none; position:relative; min-height:230px}
       @media (min-width:860px){ .hero-art{display:block} }
       .hero-gem{
@@ -2045,6 +2056,7 @@
                 <option value="violet">Violet</option>
                 <option value="cyber">Cyber</option>
                 <option value="redmoon">Red Moon</option>
+                <option value="rosered">Rose Red</option>
               </select>
             </div>
             <div class="admin-field">
@@ -3839,7 +3851,8 @@
         { id: "sakura", name: "Sakura" },
         { id: "violet", name: "Violet" },
         { id: "cyber", name: "Cyber" },
-        { id: "redmoon", name: "Red Moon" }
+        { id: "redmoon", name: "Red Moon" },
+        { id: "rosered", name: "Rose Red" }
       ];
       var themeIdx = 3; /* Violet — the default theme */
       function syncSettingsTheme() {
