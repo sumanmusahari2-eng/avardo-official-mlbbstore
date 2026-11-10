@@ -583,6 +583,9 @@
       .panel-banner{
         height:80px; padding:.65rem 1.25rem; display:flex; align-items:center; gap:1rem; color:#fff; position:relative; overflow:hidden;
       }
+      .panel-banner.has-banner{height:180px; padding:0}
+      .panel-banner.has-banner .p-mono{display:none}
+      .panel-banner.has-banner::after{display:none}
       .panel-banner::after{content:""; position:absolute; inset:0; background-image:radial-gradient(rgba(255,255,255,.16) 1px, transparent 1px); background-size:14px 14px; opacity:.35}
       .panel-banner .p-mono{
         width:58px; height:58px; flex:none; border-radius:16px; display:grid; place-items:center; z-index:1;
@@ -2910,8 +2913,11 @@
          over its gradient; the gradient alone otherwise. The image is
          fitted with contain so the whole artwork is visible, never
          cropped; the gradient fills any space the image leaves. */
+      var GAME_BANNERS = { "mlbb-in": "banner-mlbb-india.jpg" };
       function gameBannerBg(g) {
         if (!g) return "";
+        var b = g && GAME_BANNERS[g.id];
+        if (b) return "url(" + b + ") center / cover no-repeat";
         if (g.image) {
           var u = String(g.image).replace(/['"()\\]/g, "");
           if (u) return "url(" + u + ") center / contain no-repeat, " + g.grad;
@@ -2925,6 +2931,7 @@
         state.pack = g.packs[0];
         if (typeof clearCoupon === "function") clearCoupon(true);
         panelBanner.style.background = gameBannerBg(g);
+        panelBanner.classList.toggle("has-banner", !!(g && GAME_BANNERS[g.id]));
         panelMono.textContent = g.mono;
         panelTitle.textContent = g.name;
         panelSub.textContent = g.sub + " · delivered by " + (g.needsZone ? "User ID + Zone ID" : "User ID (UID)");
