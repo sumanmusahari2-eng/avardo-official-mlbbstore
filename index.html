@@ -2918,7 +2918,7 @@
       function gameBannerBg(g) {
         if (!g) return "";
         var b = g && GAME_BANNERS[g.id];
-        if (b) return "url(" + b + ") center 65% / cover no-repeat";
+        if (b) return "url(" + b + ") center 80% / cover no-repeat";
         if (g.image) {
           var u = String(g.image).replace(/['"()\\]/g, "");
           if (u) return "url(" + u + ") center / contain no-repeat, " + g.grad;
