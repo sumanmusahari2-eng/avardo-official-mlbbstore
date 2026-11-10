@@ -1195,6 +1195,8 @@
       .apack-busan{display:flex;gap:.5rem;grid-column:1/-1;align-items:center;flex-wrap:wrap}
       .apack-desc{grid-column:1/-1}
       .apack-busan input{flex:1 1 180px}
+      .apack-busan select{flex:1 1 160px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--foreground);padding:.55rem .7rem;font-weight:700;font-size:.85rem}
+      .apack-busan select:focus{outline:none;border-color:var(--accent)}
       .busan-browse-btn{border:1px solid var(--border);background:var(--card);color:var(--foreground);border-radius:999px;padding:.5rem .85rem;font-weight:800;font-size:.78rem;cursor:pointer;white-space:nowrap}
       .busan-browse-btn:hover{border-color:var(--accent)}
       .busan-browse{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:.9rem 1rem;margin:.8rem 0}
@@ -2008,6 +2010,7 @@
         </div>
         <div id="adminTabOrders" hidden>
           <p class="busan-status" id="busanStatusLine" role="status"></p>
+          <p class="busan-status" id="topupmartStatusLine" role="status"></p>
           <div class="admin-filter"><label for="adminOrderFilter" style="font-weight:800;font-size:.85rem">Status</label>
             <select id="adminOrderFilter"><option value="">All</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option><option value="refunded">Refunded</option></select>
             <button class="admin-close" id="adminOrdersRefresh" type="button">Refresh</button></div>
@@ -2184,6 +2187,11 @@
           <div class="busan-browse-head"><b id="busanBrowseTitle">Busan products</b><button class="admin-close" id="busanBrowseClose" type="button">Close</button></div>
           <p class="wallet-msg" id="busanBrowseMsg" role="status" style="margin-bottom:.5rem"></p>
           <div id="busanBrowseList"><div class="empty-small">Open a pack's Browse button to load products.</div></div>
+        </div>
+        <div class="busan-browse" id="topupmartBrowse" hidden>
+          <div class="busan-browse-head"><b id="topupmartBrowseTitle">TopUpMart packs</b><button class="admin-close" id="topupmartBrowseClose" type="button">Close</button></div>
+          <p class="wallet-msg" id="topupmartBrowseMsg" role="status" style="margin-bottom:.5rem"></p>
+          <div id="topupmartBrowseList"><div class="empty-small">Open a pack's Browse button to load packs.</div></div>
         </div>
         <button class="admin-add" id="adminAddGame" type="button">+ Add a game</button>
         <div class="admin-savebar">
@@ -4558,8 +4566,14 @@
               '<input data-pf="bonus" value="' + esc(p.bonus || "") + '" placeholder="Bonus note (optional)" aria-label="Pack bonus note" />' +
               '<button class="ap-del" type="button" data-act="del-pack" aria-label="Delete this pack">✕</button>' +
               '<div class="apack-busan">' +
+                '<select data-pf="supplier" aria-label="Fulfilment supplier">' +
+                  '<option value="busan"' + (String(p.supplier || "busan") !== "topupmart" ? " selected" : "") + ">Supplier: Busan</option>" +
+                  '<option value="topupmart"' + (String(p.supplier || "") === "topupmart" ? " selected" : "") + ">Supplier: TopUpMart</option>" +
+                '</select>' +
                 '<input data-pf="busanProductId" value="' + esc(p.busanProductId || "") + '" placeholder="Busan product ID (optional — links this pack to Busan for ID check & auto-delivery)" aria-label="Busan product ID" />' +
                 '<button class="busan-browse-btn" type="button" data-act="browse-busan">Browse Busan products</button>' +
+                '<input data-pf="topupmartPackId" value="' + esc(p.topupmartPackId || "") + '" placeholder="TopUpMart pack ID (optional — links this pack to TopUpMart for ID check & auto-delivery)" aria-label="TopUpMart pack ID" />' +
+                '<button class="busan-browse-btn" type="button" data-act="browse-topupmart">Browse TopUpMart packs</button>' +
               "</div>" +
               '<div class="apack-desc">' +
                 '<input data-pf="desc" value="' + esc(p.desc || "") + '" placeholder="Description (optional) — shown under this pack on the store" aria-label="Pack description" />' +
@@ -4885,6 +4899,70 @@
       }
       document.getElementById("busanBrowseClose").addEventListener("click", function () {
         document.getElementById("busanBrowse").hidden = true;
+      });
+      /* ---------- TopUpMart pack lookup (Games tab) ----------
+         Lists the packs on the TopUpMart account (grouped by game) so a
+         pack can be linked by tapping one — fills pack.topupmartPackId
+         AND sets pack.supplier to "topupmart", which then saves with
+         the rest of the store like any other pack field. */
+      var topupmartBrowseTarget = null;
+      var topupmartServicesCache = [];
+      function openTopupmartBrowse(gi, pi) {
+        if (!adminData || !adminData.games[gi] || !adminData.games[gi].packs[pi]) return;
+        topupmartBrowseTarget = { gi: gi, pi: pi };
+        var g = adminData.games[gi];
+        var p = g.packs[pi];
+        document.getElementById("topupmartBrowseTitle").textContent = "TopUpMart packs — for " + (g.name || "game") + " · " + (p.amt || "pack");
+        var panel = document.getElementById("topupmartBrowse");
+        panel.hidden = false;
+        var msg = document.getElementById("topupmartBrowseMsg");
+        var list = document.getElementById("topupmartBrowseList");
+        msg.textContent = ""; msg.className = "wallet-msg";
+        list.innerHTML = '<div class="empty-small">Loading TopUpMart packs…</div>';
+        panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        apiGet("/api/admin/topupmart/services").then(function (res) {
+          if (!res.ok) {
+            list.innerHTML = '<div class="empty-small">' + esc(res.d.error || "Could not load TopUpMart packs. If the API key isn't set on the server yet, add it and try again.") + "</div>";
+            return;
+          }
+          var svcs = res.d.services || [];
+          if (!Array.isArray(svcs)) svcs = [];
+          topupmartServicesCache = svcs;
+          if (!svcs.length) { list.innerHTML = '<div class="empty-small">No TopUpMart packs returned.</div>'; return; }
+          var html = "";
+          var lastGame = null;
+          svcs.forEach(function (s, idx) {
+            var price = s.price != null && s.price !== "" && !isNaN(Number(s.price)) ? "₹" + Number(s.price).toFixed(0) : "—";
+            if (s.game !== lastGame) {
+              html += '<p style="font-weight:800;font-size:.8rem;color:var(--muted);margin:.7rem 0 .3rem">' + esc(s.game || "TopUpMart") + "</p>";
+              lastGame = s.game;
+            }
+            html += '<button type="button" class="busan-prod" data-tprod="' + idx + '"><b>' + esc(s.name || "Unnamed pack") + "</b><span>" + price + " · ID " + esc(s.packId != null ? String(s.packId) : "") + "</span></button>";
+          });
+          list.innerHTML = html;
+          Array.prototype.forEach.call(list.querySelectorAll("[data-tprod]"), function (b) {
+            b.addEventListener("click", function () {
+              var s = topupmartServicesCache[parseInt(b.getAttribute("data-tprod"), 10)];
+              if (!s || !topupmartBrowseTarget || !adminData) return;
+              var tg = adminData.games[topupmartBrowseTarget.gi];
+              var tp = tg && tg.packs[topupmartBrowseTarget.pi];
+              if (!tp) return;
+              tp.topupmartPackId = s.packId != null ? String(s.packId) : "";
+              tp.supplier = "topupmart";
+              var inp = document.querySelector('.agame[data-gi="' + topupmartBrowseTarget.gi + '"] .apack[data-pi="' + topupmartBrowseTarget.pi + '"] input[data-pf="topupmartPackId"]');
+              if (inp) inp.value = tp.topupmartPackId;
+              var sel = document.querySelector('.agame[data-gi="' + topupmartBrowseTarget.gi + '"] .apack[data-pi="' + topupmartBrowseTarget.pi + '"] select[data-pf="supplier"]');
+              if (sel) sel.value = "topupmart";
+              document.getElementById("topupmartBrowse").hidden = true;
+              setAdminStatus("TopUpMart pack “" + (s.name || s.packId) + "” linked to this pack — tap Save games & packs to publish it.", "ok");
+            });
+          });
+        }).catch(function () {
+          list.innerHTML = '<div class="empty-small">Could not reach the server. Check your connection and try again.</div>';
+        });
+      }
+      document.getElementById("topupmartBrowseClose").addEventListener("click", function () {
+        document.getElementById("topupmartBrowse").hidden = true;
       });
       /* ---------- Bulk prices (Games tab) ----------
          Change many pack prices at once: adjust every price in the
@@ -5344,6 +5422,11 @@
         if (act === "browse-busan") {
           var bpEl = btn.closest("[data-pi]");
           openBusanBrowse(gi, bpEl ? parseInt(bpEl.getAttribute("data-pi"), 10) : 0);
+          return;
+        }
+        if (act === "browse-topupmart") {
+          var tpEl = btn.closest("[data-pi]");
+          openTopupmartBrowse(gi, tpEl ? parseInt(tpEl.getAttribute("data-pi"), 10) : 0);
           return;
         }
         if (act === "add-pack") {
@@ -5874,8 +5957,31 @@
         if (o.busan_error) txt += " — " + o.busan_error;
         return '<p class="busan-line">' + esc(txt) + "</p>";
       }
+      /* ---- TopUpMart connection status (top of the Orders tab) ---- */
+      function loadTopupmartStatus() {
+        var el = document.getElementById("topupmartStatusLine");
+        if (!el) return;
+        apiGet("/api/admin/topupmart/status").then(function (res) {
+          if (!res.ok) { el.textContent = ""; return; }
+          var d = res.d || {};
+          if (d.configured === false) {
+            el.textContent = "TopUpMart: not connected — add the TopUpMart API key on the server to enable ID checks and automatic delivery for TopUpMart packs.";
+            return;
+          }
+          el.textContent = "TopUpMart: connected (orders are paid from your TopUpMart wallet).";
+        }).catch(function () { el.textContent = ""; });
+      }
+      function topupmartLineHTML(o) {
+        if (!o || (!o.topupmart_status && !o.topupmart_order_id && !o.topupmart_error && !o.topupmart_payment_url)) return "";
+        var txt = "TopUpMart: " + (o.topupmart_status || "—");
+        if (o.topupmart_order_id) txt += " (order " + o.topupmart_order_id + ")";
+        if (o.topupmart_error) txt += " — " + o.topupmart_error;
+        if (o.topupmart_payment_url) txt += " — pay: " + o.topupmart_payment_url;
+        return '<p class="busan-line">' + esc(txt) + "</p>";
+      }
       function loadAdminOrders() {
         loadBusanStatus();
+        loadTopupmartStatus();
         var list = document.getElementById("adminOrdersList");
         var msg = document.getElementById("adminOrdersMsg");
         var f = document.getElementById("adminOrderFilter").value;
@@ -5885,7 +5991,7 @@
           var orders = res.d.orders || res.d || []; if (!Array.isArray(orders)) orders = [];
           if (!orders.length) { list.innerHTML = '<div class="empty-small">No orders found.</div>'; return; }
           list.innerHTML = orders.map(function (o) {
-            return '<div class="admin-order"><b>' + esc(orderCode(o)) + "</b>" + statusBadge(o.status) + "<p>" + esc(o.game || "") + " · " + esc(o.pack || "") + " · " + inr(Number(o.price || 0)) + (o.coupon_code ? " · Coupon " + esc(o.coupon_code) + (o.discount ? " (−" + inr(Number(o.discount)) + ")" : "") : "") + "<br>Buyer: " + esc(o.buyer_email || o.email || "") + "<br>Player: " + esc(o.player_id || "") + (o.zone_id ? " (" + esc(o.zone_id) + ")" : "") + " · " + esc(o.payment_method || "") + " · " + esc(fmtDate(o.created_at)) + "</p>" + busanLineHTML(o) + '<div class="row-btns">' +
+            return '<div class="admin-order"><b>' + esc(orderCode(o)) + "</b>" + statusBadge(o.status) + "<p>" + esc(o.game || "") + " · " + esc(o.pack || "") + " · " + inr(Number(o.price || 0)) + (o.coupon_code ? " · Coupon " + esc(o.coupon_code) + (o.discount ? " (−" + inr(Number(o.discount)) + ")" : "") : "") + "<br>Buyer: " + esc(o.buyer_email || o.email || "") + "<br>Player: " + esc(o.player_id || "") + (o.zone_id ? " (" + esc(o.zone_id) + ")" : "") + " · " + esc(o.payment_method || "") + " · " + esc(fmtDate(o.created_at)) + "</p>" + busanLineHTML(o) + topupmartLineHTML(o) + '<div class="row-btns">' +
               ["paid","delivered","cancelled"].map(function(s){ return '<button type="button" data-ostatus="' + s + '" data-oid="' + esc(o.id) + '">Mark ' + s + "</button>"; }).join("") +
               ((o.status === "paid" || o.status === "delivered") ? '<button type="button" data-ostatus="refunded" data-oid="' + esc(o.id) + '">Mark refunded</button>' : "") +
               (o.status === "paid" ? '<button type="button" data-fulfil="' + esc(o.id) + '">Retry fulfilment</button>' : "") + "</div></div>";
