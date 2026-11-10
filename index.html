@@ -2991,34 +2991,70 @@
         document.body.classList.remove("in-product");
         if (urlMode) gameUrl(null, urlMode);
       }
-      /* ==================== PRODUCT URL (?game=…) ====================
-         The address bar follows the product: tapping a game sets
-         ?game=<id> (shareable, and the phone Back button returns to
-         the grid); going back to All games clears it. Deep links and
+      /* ==================== PRODUCT URL (clean /product-name) ====================
+         The address bar follows the product: tapping a game sets a
+         clean path from its name — e.g. /mobile-legends-india,
+         /mlbb-x-spongebob-skin-gifting (shareable, and the phone Back
+         button returns to the grid); going back to All games clears
+         it to /. The internal game id is never shown, so an ugly id
+         like game-mwaosp32 still gets a readable link. Deep links and
          Back/Forward reuse the same helpers so they never add
-         history entries of their own. */
+         history entries of their own. An old ?game=<id> link still
+         works — it opens the game and is rewritten to the clean path. */
+      function gameSlug(g) {
+        var s = String((g && g.name) || "").toLowerCase()
+          .replace(/&/g, " and ")
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+        return s || (g && g.id) || "";
+      }
       function gameUrl(id, mode) {
         try {
           var u = new URL(window.location.href);
-          if (id) u.searchParams.set("game", id); else u.searchParams.delete("game");
+          if (id) {
+            var g = GAMES.filter(function (x) { return x.id === id; })[0];
+            u.pathname = "/" + (g ? gameSlug(g) : encodeURIComponent(id));
+          } else {
+            u.pathname = "/";
+          }
+          u.searchParams.delete("game");
           var next = u.pathname + u.search + u.hash;
           if (mode === "push" && window.history && history.pushState) history.pushState(null, "", next);
           else if (mode === "replace" && window.history && history.replaceState) history.replaceState(null, "", next);
         } catch (e) {}
       }
+      function gameFromUrl() {
+        var seg = "", qid = null;
+        try {
+          var u = new URL(window.location.href);
+          seg = decodeURIComponent(u.pathname.replace(/^\/+|\/+$/g, ""));
+          qid = u.searchParams.get("game");
+        } catch (e) {}
+        if (qid) {
+          var byId = GAMES.filter(function (x) { return x.id === qid && !x.hidden; })[0];
+          if (byId) return byId.id;
+        }
+        if (seg) {
+          var bySlug = GAMES.filter(function (x) { return !x.hidden && (gameSlug(x) === seg || x.id === seg); })[0];
+          if (bySlug) return bySlug.id;
+        }
+        return null;
+      }
+      function urlNamesGame() {
+        try {
+          var u = new URL(window.location.href);
+          return !!u.searchParams.get("game") || u.pathname.replace(/^\/+|\/+$/g, "") !== "";
+        } catch (e) { return false; }
+      }
       function openGameFromUrl(mode, allowClear) {
-        var id = null;
-        try { id = new URLSearchParams(window.location.search).get("game"); } catch (e) {}
-        if (!id) return false;
-        var g = GAMES.filter(function (x) { return x.id === id && !x.hidden; })[0];
-        if (!g) { if (allowClear) gameUrl(null, "replace"); return false; }
-        if (!panelEl.hidden && state.game && state.game.id === id) return true;
+        var id = gameFromUrl();
+        if (!id) { if (allowClear && urlNamesGame()) gameUrl(null, "replace"); return false; }
+        if (!panelEl.hidden && state.game && state.game.id === id) { gameUrl(id, "replace"); return true; }
         openProduct(id, mode);
         return true;
       }
       window.addEventListener("popstate", function () {
-        var id = null;
-        try { id = new URLSearchParams(window.location.search).get("game"); } catch (e) {}
+        var id = gameFromUrl();
         if (id) openGameFromUrl("none", false);
         else if (!panelEl.hidden) closeProduct("none");
       });
@@ -4472,9 +4508,9 @@
                 resellerText: s.resellerText || undefined,
                 seo: s.seo !== undefined ? s.seo : undefined
               });
-              /* A shared product link (?game=…) may name a game that only
-                 exists in the live catalogue — open it now that the
-                 remote data is in (clears a bad id from the bar). */
+              /* A shared product link (/product-name) may name a game
+                 that only exists in the live catalogue — open it now
+                 that the remote data is in (clears a bad link). */
               if (typeof openGameFromUrl === "function") openGameFromUrl("replace", true);
             }
           })
@@ -6627,7 +6663,7 @@
       applySeo();
       renderReseller();
       loadRemoteStore();
-      /* A shared product link (?game=…) opens that game on load;
+      /* A shared product link (/product-name) opens that game on load;
          the live catalogue may add games the built-in list lacks,
          so loadRemoteStore re-checks the link once it lands. */
       if (typeof openGameFromUrl === "function") openGameFromUrl("replace", false);
