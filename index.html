@@ -2142,6 +2142,7 @@
               <select id="bulkMode">
                 <option value="pct">Adjust prices by %</option>
                 <option value="busan">Sync with Busan prices</option>
+                <option value="topupmart">Sync with TopUpMart prices</option>
               </select>
             </div>
             <div class="admin-field" id="bulkPctField">
@@ -2153,7 +2154,7 @@
               <input id="bulkRate" type="number" step="any" min="0" value="103" />
             </div>
             <div class="admin-field" id="bulkMarkupField" hidden>
-              <label for="bulkMarkup">Customer markup over Busan cost %</label>
+              <label for="bulkMarkup" id="bulkMarkupLabel">Customer markup over Busan cost %</label>
               <input id="bulkMarkup" type="number" step="any" value="20" />
             </div>
             <div class="admin-field" id="bulkResRateField" hidden>
@@ -2161,7 +2162,7 @@
               <input id="bulkResRate" type="number" step="any" min="0" value="103" />
             </div>
             <div class="admin-field" id="bulkResMarkupField" hidden>
-              <label for="bulkResMarkup">Reseller markup over Busan cost %</label>
+              <label for="bulkResMarkup" id="bulkResMarkupLabel">Reseller markup over Busan cost %</label>
               <input id="bulkResMarkup" type="number" step="any" value="20" />
             </div>
           </div>
@@ -5013,8 +5014,10 @@
           pct: document.getElementById("bulkPct"),
           rate: document.getElementById("bulkRate"),
           markup: document.getElementById("bulkMarkup"),
+          markupLabel: document.getElementById("bulkMarkupLabel"),
           resRate: document.getElementById("bulkResRate"),
           resMarkup: document.getElementById("bulkResMarkup"),
+          resMarkupLabel: document.getElementById("bulkResMarkupLabel"),
           pctField: document.getElementById("bulkPctField"),
           rateField: document.getElementById("bulkRateField"),
           markupField: document.getElementById("bulkMarkupField"),
@@ -5127,7 +5130,9 @@
       function renderBulkPreview() {
         var e = bulkEls();
         if (!bulkPlan || !adminData) { clearBulkPreview(); return; }
-        var sync = bulkPlan.mode === "busan";
+        var sync = bulkPlan.mode === "busan" || bulkPlan.mode === "topupmart";
+        var tm = bulkPlan.mode === "topupmart";
+        var supplierName = tm ? "TopUpMart" : "Busan";
         var changed = 0, below = 0, capped = 0;
         var rowsHtml = bulkPlan.rows.map(function (r) {
           var g = adminData.games[r.gi];
@@ -5153,17 +5158,17 @@
             '<td data-label="Game">' + esc(g.name) + "</td>" +
             '<td data-label="Pack">' + esc(p.amt) + "</td>" +
             '<td class="num" data-label="Current">' + bulkMoney(oldPrice) + "</td>" +
-            (sync ? '<td class="num" data-label="Busan price">$' + Number(r.usd).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "</td>" : "") +
-            (sync ? '<td class="num" data-label="Cost (₹)">' + bulkMoney2(r.cost) + '<span class="bulk-sub">@ ₹' + esc(String(r.rate)) + " per $1</span></td>" : "") +
+            (sync ? '<td class="num" data-label="' + supplierName + ' price">' + (tm ? "₹" + Number(r.inr).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : "$" + Number(r.usd).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + "</td>" : "") +
+            (sync ? '<td class="num" data-label="Cost (₹)">' + bulkMoney2(r.cost) + (tm ? "" : '<span class="bulk-sub">@ ₹' + esc(String(r.rate)) + " per $1</span>") + "</td>" : "") +
             '<td class="num" data-label="New price"><span class="bulk-new">' + bulkMoney(r.newPrice) + "</span>" + resLine + "</td>" +
-            '<td class="num" data-label="' + (sync ? "Profit" : "Change") + '"><span class="' + (profit < 0 ? "bulk-profit-neg" : "bulk-profit-pos") + '">' + bulkSigned(profit) + "</span>" + (isBelow ? '<span class="bulk-flag">Below Busan cost</span>' : "") + "</td>" +
+            '<td class="num" data-label="' + (sync ? "Profit" : "Change") + '"><span class="' + (profit < 0 ? "bulk-profit-neg" : "bulk-profit-pos") + '">' + bulkSigned(profit) + "</span>" + (isBelow ? '<span class="bulk-flag">Below ' + supplierName + " cost</span>" : "") + "</td>" +
           "</tr>";
         }).join("");
         var html = "";
         if (bulkPlan.rows.length) {
           html += '<div class="bulk-table-wrap"><table class="bulk-table"><thead><tr>' +
             '<th>Game</th><th>Pack</th><th class="num">Current</th>' +
-            (sync ? '<th class="num">Busan price</th><th class="num">Cost (₹)</th>' : "") +
+            (sync ? '<th class="num">' + supplierName + ' price</th><th class="num">Cost (₹)</th>' : "") +
             '<th class="num">New price</th><th class="num">' + (sync ? "Profit vs cost" : "Change") + "</th>" +
             "</tr></thead><tbody>" + rowsHtml + "</tbody></table></div>";
         } else {
@@ -5178,9 +5183,11 @@
         e.preview.innerHTML = html;
         e.applyBtn.hidden = !bulkPlan.rows.length;
         var summary = bulkPlan.rows.length + (bulkPlan.rows.length === 1 ? " pack" : " packs") + " in preview · " + changed + " would change";
-        if (sync) summary += " · Customer price = Busan USD × ₹" + bulkPlan.rate + " × (1 + " + bulkPlan.markup + "% markup), rounded up · Reseller price = Busan USD × ₹" + bulkPlan.resellerRate + " × (1 + " + bulkPlan.resellerMarkup + "% markup), rounded up, never above the customer price";
+        if (sync) summary += tm
+          ? " · Customer price = TopUpMart ₹ price × (1 + " + bulkPlan.markup + "% markup), rounded up · Reseller price = TopUpMart ₹ price × (1 + " + bulkPlan.resellerMarkup + "% markup), rounded up, never above the customer price"
+          : " · Customer price = Busan USD × ₹" + bulkPlan.rate + " × (1 + " + bulkPlan.markup + "% markup), rounded up · Reseller price = Busan USD × ₹" + bulkPlan.resellerRate + " × (1 + " + bulkPlan.resellerMarkup + "% markup), rounded up, never above the customer price";
         if (capped) summary += " · " + capped + (capped === 1 ? " pack's" : " packs'") + " reseller price capped at the customer price";
-        if (below) summary += " · " + below + (below === 1 ? " pack" : " packs") + " would be priced BELOW Busan cost";
+        if (below) summary += " · " + below + (below === 1 ? " pack" : " packs") + " would be priced BELOW " + supplierName + " cost";
         bulkMsg(summary + ". Nothing is saved yet — tap Apply & save to publish.", below ? "err" : "");
       }
       function buildBulkPreview() {
@@ -5210,6 +5217,67 @@
           });
           bulkPlan = { mode: "pct", rows: rows, skipped: [] };
           renderBulkPreview();
+          return;
+        }
+        /* Sync with TopUpMart prices. TopUpMart prices are already in
+           rupees, so there is no $ rate to enter — the cost is the
+           TopUpMart price itself, plus the markup, rounded up. The
+           reseller price syncs from the same ₹ cost with its own
+           markup, capped at the customer price, exactly like Busan. */
+        if (e.mode.value === "topupmart") {
+          var tmMarkup = parseFloat(e.markup.value);
+          if (isNaN(tmMarkup)) { bulkMsg("Type a Customer markup percentage first (20 is the usual).", "err"); return; }
+          if (tmMarkup <= -100) { bulkMsg("Customer markup must be more than −100.", "err"); return; }
+          var tmResMarkup = parseFloat(e.resMarkup.value);
+          if (isNaN(tmResMarkup)) { bulkMsg("Type a Reseller markup percentage first (20 is the usual).", "err"); return; }
+          if (tmResMarkup <= -100) { bulkMsg("Reseller markup must be more than −100.", "err"); return; }
+          e.previewBtn.disabled = true;
+          bulkMsg("Loading the TopUpMart catalogue…");
+          apiGet("/api/admin/topupmart/services").then(function (res) {
+            e.previewBtn.disabled = false;
+            if (!res.ok) {
+              bulkMsg(res.d.error || "Could not load TopUpMart packs. If the API key isn't set on the server yet, add it and try again.", "err");
+              return;
+            }
+            var svcs = Array.isArray(res.d.services) ? res.d.services : [];
+            var tmCostById = {};
+            svcs.forEach(function (s) {
+              if (!s || s.packId == null || s.price == null || s.price === "") return;
+              var cleaned = String(s.price).replace(/[^0-9.\-]/g, "");
+              var parsed = Number(cleaned);
+              if (cleaned !== "" && !isNaN(parsed)) {
+                tmCostById[String(s.packId)] = parsed;
+              }
+            });
+            var tmRows = [], tmSkipped = [];
+            idx.forEach(function (gi) {
+              var g = adminData.games[gi];
+              bulkPackIndexesFor(gi).forEach(function (pi) {
+                var p = (g.packs || [])[pi];
+                if (!p) return;
+                var tid = p.topupmartPackId != null ? String(p.topupmartPackId).trim() : "";
+                if (!tid) { tmSkipped.push({ game: g.name, pack: p.amt, reason: "no TopUpMart pack linked to this pack" }); return; }
+                if (!(tid in tmCostById)) { tmSkipped.push({ game: g.name, pack: p.amt, reason: "TopUpMart pack " + tid + " was not in the catalogue" }); return; }
+                var inr = tmCostById[tid];
+                var tmCost = inr;
+                var tmNp = Math.ceil(tmCost * (1 + tmMarkup / 100));
+                var tmNewReseller, tmResellerCapped = false;
+                if (!packHasResellerPrice(p)) {
+                  tmNewReseller = tmNp;
+                } else {
+                  var tmResRaw = Math.ceil(tmCost * (1 + tmResMarkup / 100));
+                  tmResellerCapped = tmResRaw > tmNp;
+                  tmNewReseller = tmResellerCapped ? tmNp : tmResRaw;
+                }
+                tmRows.push({ gi: gi, pi: pi, inr: inr, cost: tmCost, resellerCost: tmCost, newPrice: tmNp, newReseller: tmNewReseller, resellerCapped: tmResellerCapped });
+              });
+            });
+            bulkPlan = { mode: "topupmart", markup: tmMarkup, resellerMarkup: tmResMarkup, rows: tmRows, skipped: tmSkipped };
+            renderBulkPreview();
+          }).catch(function () {
+            e.previewBtn.disabled = false;
+            bulkMsg("Could not reach the server. Check your connection and try again.", "err");
+          });
           return;
         }
         var rate = parseFloat(e.rate.value);
@@ -5314,6 +5382,19 @@
             bulkMsg("The Reseller markup changed — tap Preview changes again so you apply exactly what you previewed.", "err");
             return;
           }
+        } else if (bulkPlan.mode === "topupmart") {
+          var tmMarkupNow = parseFloat(e.markup.value);
+          if (isNaN(tmMarkupNow) || tmMarkupNow !== bulkPlan.markup) {
+            clearBulkPreview();
+            bulkMsg("The Customer markup changed — tap Preview changes again so you apply exactly what you previewed.", "err");
+            return;
+          }
+          var tmResMarkupNow = parseFloat(e.resMarkup.value);
+          if (isNaN(tmResMarkupNow) || tmResMarkupNow !== bulkPlan.resellerMarkup) {
+            clearBulkPreview();
+            bulkMsg("The Reseller markup changed — tap Preview changes again so you apply exactly what you previewed.", "err");
+            return;
+          }
         }
         var changed = 0;
         bulkPlan.rows.forEach(function (r) {
@@ -5343,15 +5424,21 @@
         var e = bulkEls();
         if (!e.scope || !e.mode) return;
         function modeUI() {
-          var sync = e.mode.value === "busan";
+          var mode = e.mode.value;
+          var sync = mode === "busan" || mode === "topupmart";
+          var tm = mode === "topupmart";
           e.pctField.hidden = sync;
-          e.rateField.hidden = !sync;
+          e.rateField.hidden = mode !== "busan";
           e.markupField.hidden = !sync;
-          e.resRateField.hidden = !sync;
+          e.resRateField.hidden = mode !== "busan";
           e.resMarkupField.hidden = !sync;
-          e.note.textContent = sync
-            ? "Customers and resellers sync separately. Each pack linked to a Busan product gets a customer price from its Busan price: Busan USD price × the Customer rate (₹ per $1), plus the Customer markup, rounded up to the next rupee. If the pack has a reseller price, that is synced on its own from the Reseller rate and Reseller markup the same way — and never ends up above the customer price: if the reseller formula comes out higher, it is capped at the customer price and flagged in the preview. A pack with no reseller price set gets the new customer price as its reseller price. The preview shows the Busan price, the rates, the ₹ costs and the profit for customer and reseller prices. Packs with no Busan product linked are skipped and listed — never matched by name or guessed."
-            : "Every pack price in the selection moves by this percentage; reseller prices move by the same percentage and never end up above the new regular price, and a pack with no reseller price set gets the new regular price as its reseller price. The preview shows the exact new prices before anything is saved.";
+          if (e.markupLabel) e.markupLabel.textContent = tm ? "Customer markup over TopUpMart cost %" : "Customer markup over Busan cost %";
+          if (e.resMarkupLabel) e.resMarkupLabel.textContent = tm ? "Reseller markup over TopUpMart cost %" : "Reseller markup over Busan cost %";
+          e.note.textContent = tm
+            ? "TopUpMart prices are already in rupees, so there is no $ rate to enter. Each pack linked to a TopUpMart pack gets a customer price from its TopUpMart price plus the Customer markup, rounded up to the next rupee. If the pack has a reseller price, that is synced on its own from the Reseller markup the same way — and never ends up above the customer price: if the reseller formula comes out higher, it is capped at the customer price and flagged in the preview. A pack with no reseller price set gets the new customer price as its reseller price. The preview shows the TopUpMart price, the ₹ costs and the profit for customer and reseller prices. Packs with no TopUpMart pack linked are skipped and listed — never matched by name or guessed."
+            : (mode === "busan"
+              ? "Customers and resellers sync separately. Each pack linked to a Busan product gets a customer price from its Busan price: Busan USD price × the Customer rate (₹ per $1), plus the Customer markup, rounded up to the next rupee. If the pack has a reseller price, that is synced on its own from the Reseller rate and Reseller markup the same way — and never ends up above the customer price: if the reseller formula comes out higher, it is capped at the customer price and flagged in the preview. A pack with no reseller price set gets the new customer price as its reseller price. The preview shows the Busan price, the rates, the ₹ costs and the profit for customer and reseller prices. Packs with no Busan product linked are skipped and listed — never matched by name or guessed."
+              : "Every pack price in the selection moves by this percentage; reseller prices move by the same percentage and never end up above the new regular price, and a pack with no reseller price set gets the new regular price as its reseller price. The preview shows the exact new prices before anything is saved.");
           clearBulkPreview();
           bulkMsg("");
         }
