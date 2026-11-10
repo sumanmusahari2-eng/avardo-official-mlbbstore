@@ -9,7 +9,7 @@
     <meta name="description" id="metaDescription" content="Fast, secure game top-ups with instant delivery and 24×7 support — MLBB diamonds, PUBG Mobile UC, Honor of Kings tokens, bundles and VIP passes." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://avardo-mlbbstore-auth.onrender.com" />
+    <link rel="preconnect" href="https://mlbbstore-vercel-backend.vercel.app" />
     <link rel="preconnect" href="https://iili.io" />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
     <style>
@@ -1355,7 +1355,7 @@
                   <button class="auth-submit" id="regSubmit" type="submit">Create account</button>
                 </form>
                 <div class="auth-or"><span>or</span></div>
-                <a class="google-btn" href="https://avardo-mlbbstore-auth.onrender.com/api/auth/google">
+                <a class="google-btn" href="https://mlbbstore-vercel-backend.vercel.app/api/auth/google">
                   <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.3 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9Z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.3 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7Z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44Z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9Z"/></svg>
                   Continue with Google
                 </a>
@@ -3996,7 +3996,7 @@
          and sent as a Bearer token to /api/auth/me. After Google, the
          service returns here with #token=<jwt> (or #auth_error=<msg>)
          in the URL hash; both are picked up on load and cleared. */
-      var AUTH_API = "https://avardo-mlbbstore-auth.onrender.com";
+      var AUTH_API = "https://mlbbstore-vercel-backend.vercel.app";
       var TOKEN_KEY = "avardo_auth_token";
       var accountBtn = document.getElementById("accountBtn");
       var authPanel = document.getElementById("authPanel");
